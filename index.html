@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Arkanoid LaPresse</title>
+    <meta charset="UTF-8">
+    <meta content='JimCarter44' name='author'>
+    <meta name='format-detection' content='telephone=no'>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            line-height: 1;
+            margin:  0;
+            padding: 0;
+        }
+
+        * { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+
+        .lp-ad {
+            position: relative;
+            width: 980px;
+            height: 670px;
+            background-color: #ffffff;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .lp-view {
+            position: absolute;
+            z-index: 0;
+            background: url("assets/bg.jpg");
+            width: 980px;
+            height: 670px;
+        }
+        .container {
+            width: 930px;
+            height: 470px;
+            margin: 10% auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px
+        }
+        .title {
+            text-align: center;
+            color: white;
+            font-size: 40px;
+        }
+        #myCanvas {
+            border-bottom: 2px solid white;
+            padding-bottom: 5px;
+            opacity: 0;
+            -webkit-transition: 0.5s linear;
+            -o-transition: 0.5s linear;
+            transition: 0.5s linear;
+        }
+        .cover {
+            background-color: #d70000;
+            height: 470px;
+            width: 930px;
+            background-size: cover;
+            position: relative;
+            top: -570px;
+            opacity: 1;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: auto;
+            -webkit-transition: 0.5s linear;
+            -o-transition: 0.5s linear;
+            transition: 0.5s linear;
+        }
+        .bts {
+            color: #d70000;
+            background-color: white;
+            width: 250px;
+            margin: auto;
+            text-align: center;
+            padding: 10px 20px;
+            font-size: 30px;
+            border-radius: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<div class='lp-ad'>
+    <div class="lp-view">
+        <div class="container">
+            <div class="title">Jeu Arkanoid LaPresse</div>
+            <canvas id="myCanvas" width= "930" height="470"></canvas>
+            <p style="margin: 30px 0 0 0; padding: 5px; color: #f1f1f1; text-align: center; font-size: 1.2em; font-family: Arial, sans-serif">
+                Cassez toutes les briques pour découvrir le message secret !</p>
+        </div>
+        <div class="cover">
+            <div class="bts">
+                Bouton lancer le jeu
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- "JAVASCRIPT" - Manage the display choose of OS (IOS/ANDROID). -->
+    <script type="text/javascript">
+        var isMobile = {
+            Android: function () {
+                return navigator.userAgent.match(/Android/i);
+            }
+        };
+
+        window.onload = function () {
+            var os = isMobile.Android() === null ? 'lp-is-ios' : 'lp-is-android';
+            document.body.classList.add(os);
+        }
+    </script>
+    <script>
+        var bts = document.querySelector('.bts');
+        var cover = document.querySelector('.cover');
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var ballRadius = 10;
+        var x = canvas.width/2;
+        var y = canvas.height-30;
+        var dx = 2;
+        var dy = -2;
+        var paddleHeight = 10;
+        var paddleWidth = 75;
+        var paddleX = (canvas.width-paddleWidth)/2;
+        var rightPressed = false;
+        var leftPressed = false;
+        var brickRowCount = 10;
+        var brickColumnCount = 7;
+        var brickWidth = 85;
+        var brickHeight = 25;
+        var brickPadding = 5;
+        var brickOffsetTop = 50;
+        var brickOffsetLeft = 30;
+        var score = 0;
+        var lives = 3;
+
+        var bricks = [];
+        for(var c=0; c<brickColumnCount; c++) {
+            bricks[c] = [];
+            for(var r=0; r<brickRowCount; r++) {
+                bricks[c][r] = { x: 0, y: 0, status: 1 };
+            }
+        }
+
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+
+        function keyDownHandler(e) {
+            if(e.key === "Right" || e.key === "ArrowRight") {
+                rightPressed = true;
+            }
+            else if(e.key === "Left" || e.key === "ArrowLeft") {
+                leftPressed = true;
+            }
+        }
+
+        function keyUpHandler(e) {
+            if(e.key === "Right" || e.key === "ArrowRight") {
+                rightPressed = false;
+            }
+            else if(e.key === "Left" || e.key === "ArrowLeft") {
+                leftPressed = false;
+            }
+        }
+
+        function mouseMoveHandler(e) {
+            var relativeX = e.clientX - canvas.offsetLeft;
+            if(relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth/2;
+            }
+        }
+        function collisionDetection() {
+            for(var c=0; c<brickColumnCount; c++) {
+                for(var r=0; r<brickRowCount; r++) {
+                    var b = bricks[c][r];
+                    if(b.status === 1) {
+                        if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                            dy = -dy;
+                            b.status = 0;
+                            score++;
+                            if(score === brickRowCount*brickColumnCount) {
+                                alert("Félicitation, vous avez gagné 1 mois d'assurance offert!");
+                                document.location.reload();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.closePath();
+        }
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.closePath();
+        }
+        function drawBricks() {
+            for(var c=0; c<brickColumnCount; c++) {
+                for(var r=0; r<brickRowCount; r++) {
+                    if(bricks[c][r].status === 1) {
+                        var brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                        var brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        ctx.beginPath();
+                        ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+        function drawScore() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("Score: "+score, 8, 20);
+        }
+        function drawLives() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            drawScore();
+            drawLives();
+            collisionDetection();
+
+            if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+                dx = -dx;
+            }
+            if(y + dy < ballRadius) {
+                dy = -dy;
+            }
+            else if(y + dy > canvas.height-ballRadius) {
+                if(x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                }
+                else {
+                    lives--;
+                    if(!lives) {
+                        alert("GAME OVER");
+                        document.location.reload();
+                    }
+                    else {
+                        x = canvas.width/2;
+                        y = canvas.height-30;
+                        dx = 3;
+                        dy = -3;
+                        paddleX = (canvas.width-paddleWidth)/2;
+                    }
+                }
+            }
+
+            if(rightPressed && paddleX < canvas.width-paddleWidth) {
+                paddleX += 7;
+            }
+            else if(leftPressed && paddleX > 0) {
+                paddleX -= 7;
+            }
+
+            x += dx;
+            y += dy;
+            requestAnimationFrame(draw);
+        }
+        bts.addEventListener('click', function () {
+            cover.style.opacity = '0';
+            setTimeout(draw , 500);
+            canvas.style.opacity = '1';
+        });
+    </script>
+
+</body>
+</html>
